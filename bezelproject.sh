@@ -4,7 +4,7 @@
 
 # Welcome
  dialog --backtitle "The Bezel Project" --title "The Bezel Project - Bezel Pack Utility" \
-    --yesno "\nThe Bezel Project Bezel Utility menu.\n\nThis utility will provide a downloader for Retroarach system bezel packs to be used for various systems within RetroPie.\n\nThese bezel packs will only work if the ROMs you are using are named according to the No-Intro naming convention used by EmuMovies/HyperSpin.\n\nThis utility provides a download for a bezel pack for a system and includes a PNG bezel file for every ROM for that system.  The download will also include the necessary configuration files needed for Retroarch to show them.  The script will also update the required retroarch.cfg files for the emulators located in the /opt/retropie/configs directory.  These changes are necessary to show the PNG bezels with an opacity of 1.\n\nPeriodically, new bezel packs are completed and you will need to run the script updater to download the newest version to see these additional packs.\n\n**NOTE**\nThe MAME bezel back is inclusive for any roms located in the arcade/fba/mame-libretro rom folders.\n\n\nDo you want to proceed?" \
+    --yesno "\nThe Bezel Project Bezel Utility menu.\n\nThis utility will provide a downloader for Retroarach system bezel packs to be used for various systems within ARES.\n\nThese bezel packs will only work if the ROMs you are using are named according to the No-Intro naming convention used by EmuMovies/HyperSpin.\n\nThis utility provides a download for a bezel pack for a system and includes a PNG bezel file for every ROM for that system.  The download will also include the necessary configuration files needed for Retroarch to show them.  The script will also update the required retroarch.cfg files for the emulators located in the /opt/ares/configs directory.  These changes are necessary to show the PNG bezels with an opacity of 1.\n\nPeriodically, new bezel packs are completed and you will need to run the script updater to download the newest version to see these additional packs.\n\n**NOTE**\nThe MAME bezel back is inclusive for any roms located in the arcade/fba/mame-libretro rom folders.\n\n\nDo you want to proceed?" \
     28 110 2>&1 > /dev/tty \
     || exit
 
@@ -48,10 +48,10 @@ function update_script() {
 if [[ -d "/home/pigaming" ]]; then
    cd "/home/pigaming/RetroPie/retropiemenu"
 else
-   cd "/home/pi/RetroPie/retropiemenu"
+   cd "/home/aresuser/ARES/settingsmenu"
 fi
 mv "bezelproject.sh" "bezelproject.sh.bkp"
-wget "https://raw.githubusercontent.com/thebezelproject/BezelProject/master/bezelproject.sh"
+wget "https://raw.githubusercontent.com/Retro-Arena/BezelProject/master/bezelproject.sh"
 chmod 777 "bezelproject.sh"
 exit
 }
@@ -105,8 +105,8 @@ fbi --timeout 5 --once bezelproject_sastyle.png
 }
 
 function download_bezelsamples() {
-wget "https://raw.githubusercontent.com/thebezelproject/BezelProject/master/bezelproject_themestyle.png"
-wget "https://raw.githubusercontent.com/thebezelproject/BezelProject/master/bezelproject_sastyle.png"
+wget "https://raw.githubusercontent.com/Retro-Arena/BezelProject/master/bezelproject_themestyle.png"
+wget "https://raw.githubusercontent.com/Retro-Arena/BezelProject/master/bezelproject_sastyle.png"
 main_menu
 }
 
@@ -123,14 +123,20 @@ function install_bezel_pack() {
     atheme=`echo ${theme} | sed 's/.*/\L&/'`
 
     if [[ "${atheme}" == "mame" ]];then
-      mv "/opt/retropie/configs/all/retroarch/config/disable_FB Alpha" "/opt/retropie/configs/all/retroarch/config/FB Alpha" 2> /dev/null
-      mv "/opt/retropie/configs/all/retroarch/config/disable_MAME 2003-Plus" "/opt/retropie/configs/all/retroarch/config/MAME 2003-Plus" 2> /dev/null
-      mv "/opt/retropie/configs/all/retroarch/config/disable_MAME 2003 (0.78)" "/opt/retropie/configs/all/retroarch/config/MAME 2003 (0.78)" 2> /dev/null
-      mv "/opt/retropie/configs/all/retroarch/config/disable_MAME 2010" "/opt/retropie/configs/all/retroarch/config/MAME 2010" 2> /dev/null
+      mv "/opt/ares/configs/all/retroarch/config/disable_FB Alpha" "/opt/ares/configs/all/retroarch/config/FB Alpha" 2> /dev/null
+      mv "/opt/ares/configs/all/retroarch/config/disable_MAME 2003-Plus" "/opt/ares/configs/all/retroarch/config/MAME 2003-Plus" 2> /dev/null
+      mv "/opt/ares/configs/all/retroarch/config/disable_MAME 2003 (0.78)" "/opt/ares/configs/all/retroarch/config/MAME 2003 (0.78)" 2> /dev/null
+      mv "/opt/ares/configs/all/retroarch/config/disable_MAME 2010" "/opt/ares/configs/all/retroarch/config/MAME 2010" 2> /dev/null
     fi
 
     git clone "https://github.com/$repo/bezelproject-$theme.git" "/tmp/${theme}"
-    cp -r "/tmp/${theme}/retroarch/" /opt/retropie/configs/all/
+    
+    # replace retropie with ares prior to copying
+    cd "/tmp/${theme}"
+    find . -type f -name "*.cfg" -print0 | xargs -0 sed -i '' -e 's/retropie/ares/g' &>/dev/null
+    cd - &>/dev/null
+    
+    cp -r "/tmp/${theme}/retroarch/" /opt/ares/configs/all/
     sudo rm -rf "/tmp/${theme}"
 
     if [[ "${atheme}" == "mame" ]];then
@@ -144,12 +150,12 @@ function install_bezel_pack() {
 
 function uninstall_bezel_pack() {
     local theme="$1"
-    if [[ -d "/opt/retropie/configs/all/retroarch/overlay/GameBezels/$theme" ]]; then
-        rm -rf "/opt/retropie/configs/all/retroarch/overlay/GameBezels/$theme"
+    if [[ -d "/opt/ares/configs/all/retroarch/overlay/GameBezels/$theme" ]]; then
+        rm -rf "/opt/ares/configs/all/retroarch/overlay/GameBezels/$theme"
     fi
     if [[ "${theme}" == "MAME" ]]; then
-      if [[ -d "/opt/retropie/configs/all/retroarch/overlay/ArcadeBezels" ]]; then
-        rm -rf "/opt/retropie/configs/all/retroarch/overlay/ArcadeBezels"
+      if [[ -d "/opt/ares/configs/all/retroarch/overlay/ArcadeBezels" ]]; then
+        rm -rf "/opt/ares/configs/all/retroarch/overlay/ArcadeBezels"
       fi
     fi
 }
@@ -210,9 +216,9 @@ hide_bezel x68000
 hide_bezel zx81
 hide_bezel zxspectrum
 
-rm -rf /opt/retropie/configs/all/retroarch/overlay/GameBezels
-rm -rf /opt/retropie/configs/all/retroarch/overlay/ArcadeBezels
-rm /home/pi/RetroPie/retropiemenu/bezelproject.sh
+rm -rf /opt/ares/configs/all/retroarch/overlay/GameBezels
+rm -rf /opt/ares/configs/all/retroarch/overlay/ArcadeBezels
+rm /home/aresuser/ARES/settingsmenu/bezelproject.sh
 
 }
 
@@ -227,7 +233,7 @@ function download_bezel() {
         'thebezelproject C64'
         'thebezelproject ColecoVision'
         'thebezelproject Dreamcast'
-        'thebezelproject FDS'
+		'thebezelproject FDS'
         'thebezelproject GB'
         'thebezelproject GBA'
         'thebezelproject GBC'
@@ -276,7 +282,7 @@ function download_bezel() {
             if [[ $theme == "MegaDrive" ]]; then
               theme="Megadrive"
             fi
-            if [[ -d "/opt/retropie/configs/all/retroarch/overlay/GameBezels/$theme" ]]; then
+            if [[ -d "/opt/ares/configs/all/retroarch/overlay/GameBezels/$theme" ]]; then
                 status+=("i")
                 options+=("$i" "Update or Uninstall $theme (installed)")
                 installed_bezelpacks+=("$theme $repo")
@@ -296,7 +302,7 @@ function download_bezel() {
                 repo="${theme[0]}"
                 theme="${theme[1]}"
 #                if [[ "${status[choice]}" == "i" ]]; then
-                if [[ -d "/opt/retropie/configs/all/retroarch/overlay/GameBezels/$theme" ]]; then
+                if [[ -d "/opt/ares/configs/all/retroarch/overlay/GameBezels/$theme" ]]; then
                     options=(1 "Update $theme" 2 "Uninstall $theme")
                     cmd=(dialog --backtitle "$__backtitle" --menu "Choose an option for the bezel pack" 12 40 06)
                     local choice=$("${cmd[@]}" "${options[@]}" 2>&1 >/dev/tty)
@@ -329,14 +335,14 @@ function install_bezel_packsa() {
     atheme=`echo ${theme} | sed 's/.*/\L&/'`
 
     if [[ "${atheme}" == "mame" ]];then
-      mv "/opt/retropie/configs/all/retroarch/config/disable_FB Alpha" "/opt/retropie/configs/all/retroarch/config/FB Alpha" 2> /dev/null
-      mv "/opt/retropie/configs/all/retroarch/config/disable_MAME 2003-Plus" "/opt/retropie/configs/all/retroarch/config/MAME 2003-Plus" 2> /dev/null
-      mv "/opt/retropie/configs/all/retroarch/config/disable_MAME 2003 (0.78)" "/opt/retropie/configs/all/retroarch/config/MAME 2003 (0.78)" 2> /dev/null
-      mv "/opt/retropie/configs/all/retroarch/config/disable_MAME 2010" "/opt/retropie/configs/all/retroarch/config/MAME 2010" 2> /dev/null
+      mv "/opt/ares/configs/all/retroarch/config/disable_FB Alpha" "/opt/ares/configs/all/retroarch/config/FB Alpha" 2> /dev/null
+      mv "/opt/ares/configs/all/retroarch/config/disable_MAME 2003-Plus" "/opt/ares/configs/all/retroarch/config/MAME 2003-Plus" 2> /dev/null
+      mv "/opt/ares/configs/all/retroarch/config/disable_MAME 2003 (0.78)" "/opt/ares/configs/all/retroarch/config/MAME 2003 (0.78)" 2> /dev/null
+      mv "/opt/ares/configs/all/retroarch/config/disable_MAME 2010" "/opt/ares/configs/all/retroarch/config/MAME 2010" 2> /dev/null
     fi
 
     git clone "https://github.com/$repo/bezelprojectsa-$theme.git" "/tmp/${theme}"
-    cp -r "/tmp/${theme}/retroarch/" /opt/retropie/configs/all/
+    cp -r "/tmp/${theme}/retroarch/" /opt/ares/configs/all/
     sudo rm -rf "/tmp/${theme}"
 
     if [[ "${atheme}" == "mame" ]];then
@@ -417,7 +423,7 @@ function download_bezelsa() {
             if [[ $theme == "MegaDrive" ]]; then
               theme="Megadrive"
             fi
-            if [[ -d "/opt/retropie/configs/all/retroarch/overlay/GameBezels/$theme" ]]; then
+            if [[ -d "/opt/ares/configs/all/retroarch/overlay/GameBezels/$theme" ]]; then
                 status+=("i")
                 options+=("$i" "Update or Uninstall $theme (installed)")
                 installed_bezelpacks+=("$theme $repo")
@@ -437,7 +443,7 @@ function download_bezelsa() {
                 repo="${theme[0]}"
                 theme="${theme[1]}"
 #                if [[ "${status[choice]}" == "i" ]]; then
-                if [[ -d "/opt/retropie/configs/all/retroarch/overlay/GameBezels/$theme" ]]; then
+                if [[ -d "/opt/ares/configs/all/retroarch/overlay/GameBezels/$theme" ]]; then
                     options=(1 "Update $theme" 2 "Uninstall $theme")
                     cmd=(dialog --backtitle "$__backtitle" --menu "Choose an option for the bezel pack" 12 40 06)
                     local choice=$("${cmd[@]}" "${options[@]}" 2>&1 >/dev/tty)
@@ -705,36 +711,36 @@ clear
 function hide_bezel() {
 dialog --infobox "...processing..." 3 20 ; sleep 2
 emulator=$1
-file="/opt/retropie/configs/${emulator}/retroarch.cfg"
+file="/opt/ares/configs/${emulator}/retroarch.cfg"
 
 case ${emulator} in
 arcade)
-  cp /opt/retropie/configs/${emulator}/retroarch.cfg /opt/retropie/configs/${emulator}/retroarch.cfg.bkp
-  cat /opt/retropie/configs/${emulator}/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-  cp /tmp/retroarch.cfg /opt/retropie/configs/${emulator}/retroarch.cfg
-  mv "/opt/retropie/configs/all/retroarch/config/FB Alpha" "/opt/retropie/configs/all/retroarch/config/disable_FB Alpha"
-  mv "/opt/retropie/configs/all/retroarch/config/MAME 2003-Plus" "/opt/retropie/configs/all/retroarch/config/disable_MAME 2003-Plus"
-  mv "/opt/retropie/configs/all/retroarch/config/MAME 2003 (0.78)" "/opt/retropie/configs/all/retroarch/config/disable_MAME 2003 (0.78)"
-  mv "/opt/retropie/configs/all/retroarch/config/MAME 2010" "/opt/retropie/configs/all/retroarch/config/disable_MAME 2010"
+  cp /opt/ares/configs/${emulator}/retroarch.cfg /opt/ares/configs/${emulator}/retroarch.cfg.bkp
+  cat /opt/ares/configs/${emulator}/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+  cp /tmp/retroarch.cfg /opt/ares/configs/${emulator}/retroarch.cfg
+  mv "/opt/ares/configs/all/retroarch/config/FB Alpha" "/opt/ares/configs/all/retroarch/config/disable_FB Alpha"
+  mv "/opt/ares/configs/all/retroarch/config/MAME 2003-Plus" "/opt/ares/configs/all/retroarch/config/disable_MAME 2003-Plus"
+  mv "/opt/ares/configs/all/retroarch/config/MAME 2003 (0.78)" "/opt/ares/configs/all/retroarch/config/disable_MAME 2003 (0.78)"
+  mv "/opt/ares/configs/all/retroarch/config/MAME 2010" "/opt/ares/configs/all/retroarch/config/disable_MAME 2010"
   ;;
 fba)
-  cp /opt/retropie/configs/${emulator}/retroarch.cfg /opt/retropie/configs/${emulator}/retroarch.cfg.bkp
-  cat /opt/retropie/configs/${emulator}/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-  cp /tmp/retroarch.cfg /opt/retropie/configs/${emulator}/retroarch.cfg
-  mv "/opt/retropie/configs/all/retroarch/config/FB Alpha" "/opt/retropie/configs/all/retroarch/config/disable_FB Alpha"
+  cp /opt/ares/configs/${emulator}/retroarch.cfg /opt/ares/configs/${emulator}/retroarch.cfg.bkp
+  cat /opt/ares/configs/${emulator}/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+  cp /tmp/retroarch.cfg /opt/ares/configs/${emulator}/retroarch.cfg
+  mv "/opt/ares/configs/all/retroarch/config/FB Alpha" "/opt/ares/configs/all/retroarch/config/disable_FB Alpha"
   ;;
 mame-libretro)
-  cp /opt/retropie/configs/${emulator}/retroarch.cfg /opt/retropie/configs/${emulator}/retroarch.cfg.bkp
-  cat /opt/retropie/configs/${emulator}/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-  cp /tmp/retroarch.cfg /opt/retropie/configs/${emulator}/retroarch.cfg
-  mv "/opt/retropie/configs/all/retroarch/config/MAME 2003-Plus" "/opt/retropie/configs/all/retroarch/config/disable_MAME 2003-Plus"
-  mv "/opt/retropie/configs/all/retroarch/config/MAME 2003 (0.78)" "/opt/retropie/configs/all/retroarch/config/disable_MAME 2003 (0.78)"
-  mv "/opt/retropie/configs/all/retroarch/config/MAME 2010" "/opt/retropie/configs/all/retroarch/config/disable_MAME 2010"
+  cp /opt/ares/configs/${emulator}/retroarch.cfg /opt/ares/configs/${emulator}/retroarch.cfg.bkp
+  cat /opt/ares/configs/${emulator}/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+  cp /tmp/retroarch.cfg /opt/ares/configs/${emulator}/retroarch.cfg
+  mv "/opt/ares/configs/all/retroarch/config/MAME 2003-Plus" "/opt/ares/configs/all/retroarch/config/disable_MAME 2003-Plus"
+  mv "/opt/ares/configs/all/retroarch/config/MAME 2003 (0.78)" "/opt/ares/configs/all/retroarch/config/disable_MAME 2003 (0.78)"
+  mv "/opt/ares/configs/all/retroarch/config/MAME 2010" "/opt/ares/configs/all/retroarch/config/disable_MAME 2010"
   ;;
 *)
-  cp /opt/retropie/configs/${emulator}/retroarch.cfg /opt/retropie/configs/${emulator}/retroarch.cfg.bkp
-  cat /opt/retropie/configs/${emulator}/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-  cp /tmp/retroarch.cfg /opt/retropie/configs/${emulator}/retroarch.cfg
+  cp /opt/ares/configs/${emulator}/retroarch.cfg /opt/ares/configs/${emulator}/retroarch.cfg.bkp
+  cat /opt/ares/configs/${emulator}/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+  cp /tmp/retroarch.cfg /opt/ares/configs/${emulator}/retroarch.cfg
   ;;
 esac
 
@@ -743,899 +749,899 @@ esac
 function show_bezel() {
 dialog --infobox "...processing..." 3 20 ; sleep 2
 emulator=$1
-file="/opt/retropie/configs/${emulator}/retroarch.cfg"
+file="/opt/ares/configs/${emulator}/retroarch.cfg"
 
 case ${emulator} in
 arcade)
-  ifexist=`cat /opt/retropie/configs/arcade/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/arcade/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/arcade/retroarch.cfg /opt/retropie/configs/arcade/retroarch.cfg.bkp
-    cat /opt/retropie/configs/arcade/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/arcade/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/MAME-Horizontal.cfg"' /opt/retropie/configs/arcade/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/arcade/retroarch.cfg
-    mv "/opt/retropie/configs/all/retroarch/config/disable_FB Alpha" "/opt/retropie/configs/all/retroarch/config/FB Alpha"
-    mv "/opt/retropie/configs/all/retroarch/config/disable_MAME 2003-Plus" "/opt/retropie/configs/all/retroarch/config/MAME 2003-Plus"
-    mv "/opt/retropie/configs/all/retroarch/config/disable_MAME 2003 (0.78)" "/opt/retropie/configs/all/retroarch/config/MAME 2003 (0.78)"
-    mv "/opt/retropie/configs/all/retroarch/config/disable_MAME 2010" "/opt/retropie/configs/all/retroarch/config/MAME 2010"
+    cp /opt/ares/configs/arcade/retroarch.cfg /opt/ares/configs/arcade/retroarch.cfg.bkp
+    cat /opt/ares/configs/arcade/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/arcade/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/MAME-Horizontal.cfg"' /opt/ares/configs/arcade/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/arcade/retroarch.cfg
+    mv "/opt/ares/configs/all/retroarch/config/disable_FB Alpha" "/opt/ares/configs/all/retroarch/config/FB Alpha"
+    mv "/opt/ares/configs/all/retroarch/config/disable_MAME 2003-Plus" "/opt/ares/configs/all/retroarch/config/MAME 2003-Plus"
+    mv "/opt/ares/configs/all/retroarch/config/disable_MAME 2003 (0.78)" "/opt/ares/configs/all/retroarch/config/MAME 2003 (0.78)"
+    mv "/opt/ares/configs/all/retroarch/config/disable_MAME 2010" "/opt/ares/configs/all/retroarch/config/MAME 2010"
   else
-    cp /opt/retropie/configs/arcade/retroarch.cfg /opt/retropie/configs/arcade/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/MAME-Horizontal.cfg"' /opt/retropie/configs/arcade/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/arcade/retroarch.cfg
-    mv "/opt/retropie/configs/all/retroarch/config/disable_FB Alpha" "/opt/retropie/configs/all/retroarch/config/FB Alpha"
-    mv "/opt/retropie/configs/all/retroarch/config/disable_MAME 2003-Plus" "/opt/retropie/configs/all/retroarch/config/MAME 2003-Plus"
-    mv "/opt/retropie/configs/all/retroarch/config/disable_MAME 2003 (0.78)" "/opt/retropie/configs/all/retroarch/config/MAME 2003 (0.78)"
-    mv "/opt/retropie/configs/all/retroarch/config/disable_MAME 2010" "/opt/retropie/configs/all/retroarch/config/MAME 2010"
+    cp /opt/ares/configs/arcade/retroarch.cfg /opt/ares/configs/arcade/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/MAME-Horizontal.cfg"' /opt/ares/configs/arcade/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/arcade/retroarch.cfg
+    mv "/opt/ares/configs/all/retroarch/config/disable_FB Alpha" "/opt/ares/configs/all/retroarch/config/FB Alpha"
+    mv "/opt/ares/configs/all/retroarch/config/disable_MAME 2003-Plus" "/opt/ares/configs/all/retroarch/config/MAME 2003-Plus"
+    mv "/opt/ares/configs/all/retroarch/config/disable_MAME 2003 (0.78)" "/opt/ares/configs/all/retroarch/config/MAME 2003 (0.78)"
+    mv "/opt/ares/configs/all/retroarch/config/disable_MAME 2010" "/opt/ares/configs/all/retroarch/config/MAME 2010"
   fi
   ;;
 fba)
-  ifexist=`cat /opt/retropie/configs/fba/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/fba/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/fba/retroarch.cfg /opt/retropie/configs/fba/retroarch.cfg.bkp
-    cat /opt/retropie/configs/fba/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/fba/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/MAME-Horizontal.cfg"' /opt/retropie/configs/fba/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/fba/retroarch.cfg
-    mv "/opt/retropie/configs/all/retroarch/config/disable_FB Alpha" "/opt/retropie/configs/all/retroarch/config/FB Alpha"
+    cp /opt/ares/configs/fba/retroarch.cfg /opt/ares/configs/fba/retroarch.cfg.bkp
+    cat /opt/ares/configs/fba/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/fba/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/MAME-Horizontal.cfg"' /opt/ares/configs/fba/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/fba/retroarch.cfg
+    mv "/opt/ares/configs/all/retroarch/config/disable_FB Alpha" "/opt/ares/configs/all/retroarch/config/FB Alpha"
   else
-    cp /opt/retropie/configs/fba/retroarch.cfg /opt/retropie/configs/fba/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/MAME-Horizontal.cfg"' /opt/retropie/configs/fba/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/fba/retroarch.cfg
-    mv "/opt/retropie/configs/all/retroarch/config/disable_FB Alpha" "/opt/retropie/configs/all/retroarch/config/FB Alpha"
+    cp /opt/ares/configs/fba/retroarch.cfg /opt/ares/configs/fba/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/MAME-Horizontal.cfg"' /opt/ares/configs/fba/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/fba/retroarch.cfg
+    mv "/opt/ares/configs/all/retroarch/config/disable_FB Alpha" "/opt/ares/configs/all/retroarch/config/FB Alpha"
   fi
   ;;
 mame-libretro)
-  ifexist=`cat /opt/retropie/configs/mame-libretro/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/mame-libretro/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/mame-libretro/retroarch.cfg /opt/retropie/configs/mame-libretro/retroarch.cfg.bkp
-    cat /opt/retropie/configs/mame-libretro/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/mame-libretro/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/MAME-Horizontal.cfg"' /opt/retropie/configs/mame-libretro/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/mame-libretro/retroarch.cfg
-    mv "/opt/retropie/configs/all/retroarch/config/disable_MAME 2003-Plus" "/opt/retropie/configs/all/retroarch/config/MAME 2003-Plus"
-    mv "/opt/retropie/configs/all/retroarch/config/disable_MAME 2003 (0.78)" "/opt/retropie/configs/all/retroarch/config/MAME 2003 (0.78)"
-    mv "/opt/retropie/configs/all/retroarch/config/disable_MAME 2010" "/opt/retropie/configs/all/retroarch/config/MAME 2010"
+    cp /opt/ares/configs/mame-libretro/retroarch.cfg /opt/ares/configs/mame-libretro/retroarch.cfg.bkp
+    cat /opt/ares/configs/mame-libretro/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/mame-libretro/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/MAME-Horizontal.cfg"' /opt/ares/configs/mame-libretro/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/mame-libretro/retroarch.cfg
+    mv "/opt/ares/configs/all/retroarch/config/disable_MAME 2003-Plus" "/opt/ares/configs/all/retroarch/config/MAME 2003-Plus"
+    mv "/opt/ares/configs/all/retroarch/config/disable_MAME 2003 (0.78)" "/opt/ares/configs/all/retroarch/config/MAME 2003 (0.78)"
+    mv "/opt/ares/configs/all/retroarch/config/disable_MAME 2010" "/opt/ares/configs/all/retroarch/config/MAME 2010"
   else
-    cp /opt/retropie/configs/mame-libretro/retroarch.cfg /opt/retropie/configs/mame-libretro/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/MAME-Horizontal.cfg"' /opt/retropie/configs/mame-libretro/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/mame-libretro/retroarch.cfg
-    mv "/opt/retropie/configs/all/retroarch/config/disable_MAME 2003-Plus" "/opt/retropie/configs/all/retroarch/config/MAME 2003-Plus"
-    mv "/opt/retropie/configs/all/retroarch/config/disable_MAME 2003 (0.78)" "/opt/retropie/configs/all/retroarch/config/MAME 2003 (0.78)"
-    mv "/opt/retropie/configs/all/retroarch/config/disable_MAME 2010" "/opt/retropie/configs/all/retroarch/config/MAME 2010"
+    cp /opt/ares/configs/mame-libretro/retroarch.cfg /opt/ares/configs/mame-libretro/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/MAME-Horizontal.cfg"' /opt/ares/configs/mame-libretro/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/mame-libretro/retroarch.cfg
+    mv "/opt/ares/configs/all/retroarch/config/disable_MAME 2003-Plus" "/opt/ares/configs/all/retroarch/config/MAME 2003-Plus"
+    mv "/opt/ares/configs/all/retroarch/config/disable_MAME 2003 (0.78)" "/opt/ares/configs/all/retroarch/config/MAME 2003 (0.78)"
+    mv "/opt/ares/configs/all/retroarch/config/disable_MAME 2010" "/opt/ares/configs/all/retroarch/config/MAME 2010"
   fi
   ;;
 atari2600)
-  ifexist=`cat /opt/retropie/configs/atari2600/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/atari2600/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/atari2600/retroarch.cfg /opt/retropie/configs/atari2600/retroarch.cfg.bkp
-    cat /opt/retropie/configs/atari2600/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/atari2600/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Atari-2600.cfg"' /opt/retropie/configs/atari2600/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/atari2600/retroarch.cfg
+    cp /opt/ares/configs/atari2600/retroarch.cfg /opt/ares/configs/atari2600/retroarch.cfg.bkp
+    cat /opt/ares/configs/atari2600/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/atari2600/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Atari-2600.cfg"' /opt/ares/configs/atari2600/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/atari2600/retroarch.cfg
   else
-    cp /opt/retropie/configs/atari2600/retroarch.cfg /opt/retropie/configs/atari2600/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Atari-2600.cfg"' /opt/retropie/configs/atari2600/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/atari2600/retroarch.cfg
+    cp /opt/ares/configs/atari2600/retroarch.cfg /opt/ares/configs/atari2600/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Atari-2600.cfg"' /opt/ares/configs/atari2600/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/atari2600/retroarch.cfg
   fi
   ;;
 atari5200)
-  ifexist=`cat /opt/retropie/configs/atari5200/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/atari5200/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/atari5200/retroarch.cfg /opt/retropie/configs/atari5200/retroarch.cfg.bkp
-    cat /opt/retropie/configs/atari5200/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/atari5200/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Atari-5200.cfg"' /opt/retropie/configs/atari5200/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/atari5200/retroarch.cfg
+    cp /opt/ares/configs/atari5200/retroarch.cfg /opt/ares/configs/atari5200/retroarch.cfg.bkp
+    cat /opt/ares/configs/atari5200/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/atari5200/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Atari-5200.cfg"' /opt/ares/configs/atari5200/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/atari5200/retroarch.cfg
   else
-    cp /opt/retropie/configs/atari5200/retroarch.cfg /opt/retropie/configs/atari5200/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Atari-5200.cfg"' /opt/retropie/configs/atari5200/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/atari5200/retroarch.cfg
+    cp /opt/ares/configs/atari5200/retroarch.cfg /opt/ares/configs/atari5200/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Atari-5200.cfg"' /opt/ares/configs/atari5200/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/atari5200/retroarch.cfg
   fi
   ;;
 atari7800)
-  ifexist=`cat /opt/retropie/configs/atari7800/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/atari7800/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/atari7800/retroarch.cfg /opt/retropie/configs/atari7800/retroarch.cfg.bkp
-    cat /opt/retropie/configs/atari7800/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/atari7800/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Atari-7800.cfg"' /opt/retropie/configs/atari7800/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/atari7800/retroarch.cfg
+    cp /opt/ares/configs/atari7800/retroarch.cfg /opt/ares/configs/atari7800/retroarch.cfg.bkp
+    cat /opt/ares/configs/atari7800/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/atari7800/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Atari-7800.cfg"' /opt/ares/configs/atari7800/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/atari7800/retroarch.cfg
   else
-    cp /opt/retropie/configs/atari7800/retroarch.cfg /opt/retropie/configs/atari7800/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Atari-7800.cfg"' /opt/retropie/configs/atari7800/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/atari7800/retroarch.cfg
+    cp /opt/ares/configs/atari7800/retroarch.cfg /opt/ares/configs/atari7800/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Atari-7800.cfg"' /opt/ares/configs/atari7800/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/atari7800/retroarch.cfg
   fi
   ;;
 atarijaguar)
-  ifexist=`cat /opt/retropie/configs/atarijaguar/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/atarijaguar/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/atarijaguar/retroarch.cfg /opt/retropie/configs/atarijaguar/retroarch.cfg.bkp
-    cat /opt/retropie/configs/atarijaguar/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/atarijaguar/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Atari-Jaguar.cfg"' /opt/retropie/configs/atarijaguar/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/atarijaguar/retroarch.cfg
+    cp /opt/ares/configs/atarijaguar/retroarch.cfg /opt/ares/configs/atarijaguar/retroarch.cfg.bkp
+    cat /opt/ares/configs/atarijaguar/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/atarijaguar/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Atari-Jaguar.cfg"' /opt/ares/configs/atarijaguar/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/atarijaguar/retroarch.cfg
   else
-    cp /opt/retropie/configs/atarijaguar/retroarch.cfg /opt/retropie/configs/atarijaguar/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Atari-Jaguar.cfg"' /opt/retropie/configs/atarijaguar/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/atarijaguar/retroarch.cfg
+    cp /opt/ares/configs/atarijaguar/retroarch.cfg /opt/ares/configs/atarijaguar/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Atari-Jaguar.cfg"' /opt/ares/configs/atarijaguar/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/atarijaguar/retroarch.cfg
   fi
   ;;
 atomiswave)
-  ifexist=`cat /opt/retropie/configs/atomiswave/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/atomiswave/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/atomiswave/retroarch.cfg /opt/retropie/configs/atomiswave/retroarch.cfg.bkp
-    cat /opt/retropie/configs/atomiswave/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/atomiswave/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Atomiswave.cfg"' /opt/retropie/configs/atomiswave/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/atomiswave/retroarch.cfg
+    cp /opt/ares/configs/atomiswave/retroarch.cfg /opt/ares/configs/atomiswave/retroarch.cfg.bkp
+    cat /opt/ares/configs/atomiswave/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/atomiswave/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Atomiswave.cfg"' /opt/ares/configs/atomiswave/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/atomiswave/retroarch.cfg
   else
-    cp /opt/retropie/configs/atomiswave/retroarch.cfg /opt/retropie/configs/atomiswave/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Atomiswave.cfg"' /opt/retropie/configs/atomiswave/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/atomiswave/retroarch.cfg
+    cp /opt/ares/configs/atomiswave/retroarch.cfg /opt/ares/configs/atomiswave/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Atomiswave.cfg"' /opt/ares/configs/atomiswave/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/atomiswave/retroarch.cfg
   fi
   ;;
 coleco)
-  ifexist=`cat /opt/retropie/configs/coleco/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/coleco/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/coleco/retroarch.cfg /opt/retropie/configs/coleco/retroarch.cfg.bkp
-    cat /opt/retropie/configs/coleco/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/coleco/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Colecovision.cfg"' /opt/retropie/configs/coleco/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/coleco/retroarch.cfg
+    cp /opt/ares/configs/coleco/retroarch.cfg /opt/ares/configs/coleco/retroarch.cfg.bkp
+    cat /opt/ares/configs/coleco/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/coleco/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Colecovision.cfg"' /opt/ares/configs/coleco/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/coleco/retroarch.cfg
   else
-    cp /opt/retropie/configs/coleco/retroarch.cfg /opt/retropie/configs/coleco/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Colecovision.cfg"' /opt/retropie/configs/coleco/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/coleco/retroarch.cfg
+    cp /opt/ares/configs/coleco/retroarch.cfg /opt/ares/configs/coleco/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Colecovision.cfg"' /opt/ares/configs/coleco/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/coleco/retroarch.cfg
   fi
   ;;
 dreamcast)
-  ifexist=`cat /opt/retropie/configs/dreamcast/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/dreamcast/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/dreamcast/retroarch.cfg /opt/retropie/configs/dreamcast/retroarch.cfg.bkp
-    cat /opt/retropie/configs/dreamcast/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/dreamcast/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Dreamcast.cfg"' /opt/retropie/configs/dreamcast/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/dreamcast/retroarch.cfg
+    cp /opt/ares/configs/dreamcast/retroarch.cfg /opt/ares/configs/dreamcast/retroarch.cfg.bkp
+    cat /opt/ares/configs/dreamcast/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/dreamcast/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Dreamcast.cfg"' /opt/ares/configs/dreamcast/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/dreamcast/retroarch.cfg
   else
-    cp /opt/retropie/configs/dreamcast/retroarch.cfg /opt/retropie/configs/dreamcast/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Dreamcast.cfg"' /opt/retropie/configs/dreamcast/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/dreamcast/retroarch.cfg
+    cp /opt/ares/configs/dreamcast/retroarch.cfg /opt/ares/configs/dreamcast/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Dreamcast.cfg"' /opt/ares/configs/dreamcast/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/dreamcast/retroarch.cfg
   fi
   ;;
 famicom)
-  ifexist=`cat /opt/retropie/configs/famicom/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/famicom/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/famicom/retroarch.cfg /opt/retropie/configs/famicom/retroarch.cfg.bkp
-    cat /opt/retropie/configs/famicom/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/famicom/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Nintendo-Famicom.cfg"' /opt/retropie/configs/famicom/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/famicom/retroarch.cfg
+    cp /opt/ares/configs/famicom/retroarch.cfg /opt/ares/configs/famicom/retroarch.cfg.bkp
+    cat /opt/ares/configs/famicom/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/famicom/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Nintendo-Famicom.cfg"' /opt/ares/configs/famicom/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/famicom/retroarch.cfg
   else
-    cp /opt/retropie/configs/famicom/retroarch.cfg /opt/retropie/configs/famicom/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Nintendo-Famicom.cfg"' /opt/retropie/configs/famicom/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/famicom/retroarch.cfg
+    cp /opt/ares/configs/famicom/retroarch.cfg /opt/ares/configs/famicom/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Nintendo-Famicom.cfg"' /opt/ares/configs/famicom/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/famicom/retroarch.cfg
   fi
   ;;
 fds)
-  ifexist=`cat /opt/retropie/configs/fds/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/fds/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/fds/retroarch.cfg /opt/retropie/configs/fds/retroarch.cfg.bkp
-    cat /opt/retropie/configs/fds/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/fds/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Nintendo-Famicom-Disk-System.cfg"' /opt/retropie/configs/fds/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/fds/retroarch.cfg
+    cp /opt/ares/configs/fds/retroarch.cfg /opt/ares/configs/fds/retroarch.cfg.bkp
+    cat /opt/ares/configs/fds/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/fds/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Nintendo-Famicom-Disk-System.cfg"' /opt/ares/configs/fds/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/fds/retroarch.cfg
   else
-    cp /opt/retropie/configs/fds/retroarch.cfg /opt/retropie/configs/fds/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Nintendo-Famicom-Disk-System.cfg"' /opt/retropie/configs/fds/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/fds/retroarch.cfg
+    cp /opt/ares/configs/fds/retroarch.cfg /opt/ares/configs/fds/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Nintendo-Famicom-Disk-System.cfg"' /opt/ares/configs/fds/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/fds/retroarch.cfg
   fi
   ;;
 intellivision)
-  ifexist=`cat /opt/retropie/configs/intellivision/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/intellivision/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/intellivision/retroarch.cfg /opt/retropie/configs/intellivision/retroarch.cfg.bkp
-    cat /opt/retropie/configs/intellivision/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/intellivision/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Intellivision.cfg"' /opt/retropie/configs/intellivision/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/intellivision/retroarch.cfg
+    cp /opt/ares/configs/intellivision/retroarch.cfg /opt/ares/configs/intellivision/retroarch.cfg.bkp
+    cat /opt/ares/configs/intellivision/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/intellivision/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Intellivision.cfg"' /opt/ares/configs/intellivision/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/intellivision/retroarch.cfg
   else
-    cp /opt/retropie/configs/intellivision/retroarch.cfg /opt/retropie/configs/intellivision/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Intellivision.cfg"' /opt/retropie/configs/intellivision/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/intellivision/retroarch.cfg
+    cp /opt/ares/configs/intellivision/retroarch.cfg /opt/ares/configs/intellivision/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Intellivision.cfg"' /opt/ares/configs/intellivision/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/intellivision/retroarch.cfg
   fi
   ;;
 mastersystem)
-  ifexist=`cat /opt/retropie/configs/mastersystem/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/mastersystem/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/mastersystem/retroarch.cfg /opt/retropie/configs/mastersystem/retroarch.cfg.bkp
-    cat /opt/retropie/configs/mastersystem/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/mastersystem/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Sega-Master-System.cfg"' /opt/retropie/configs/mastersystem/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/mastersystem/retroarch.cfg
+    cp /opt/ares/configs/mastersystem/retroarch.cfg /opt/ares/configs/mastersystem/retroarch.cfg.bkp
+    cat /opt/ares/configs/mastersystem/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/mastersystem/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Sega-Master-System.cfg"' /opt/ares/configs/mastersystem/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/mastersystem/retroarch.cfg
   else
-    cp /opt/retropie/configs/mastersystem/retroarch.cfg /opt/retropie/configs/mastersystem/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Sega-Master-System.cfg"' /opt/retropie/configs/mastersystem/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/mastersystem/retroarch.cfg
+    cp /opt/ares/configs/mastersystem/retroarch.cfg /opt/ares/configs/mastersystem/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Sega-Master-System.cfg"' /opt/ares/configs/mastersystem/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/mastersystem/retroarch.cfg
   fi
   ;;
 megadrive)
-  ifexist=`cat /opt/retropie/configs/megadrive/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/megadrive/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/megadrive/retroarch.cfg /opt/retropie/configs/megadrive/retroarch.cfg.bkp
-    cat /opt/retropie/configs/megadrive/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/megadrive/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Sega-Mega-Drive.cfg"' /opt/retropie/configs/megadrive/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/megadrive/retroarch.cfg
+    cp /opt/ares/configs/megadrive/retroarch.cfg /opt/ares/configs/megadrive/retroarch.cfg.bkp
+    cat /opt/ares/configs/megadrive/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/megadrive/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Sega-Mega-Drive.cfg"' /opt/ares/configs/megadrive/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/megadrive/retroarch.cfg
   else
-    cp /opt/retropie/configs/megadrive/retroarch.cfg /opt/retropie/configs/megadrive/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Sega-Mega-Drive.cfg"' /opt/retropie/configs/megadrive/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/megadrive/retroarch.cfg
+    cp /opt/ares/configs/megadrive/retroarch.cfg /opt/ares/configs/megadrive/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Sega-Mega-Drive.cfg"' /opt/ares/configs/megadrive/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/megadrive/retroarch.cfg
   fi
   ;;
 megadrive-japan)
-  ifexist=`cat /opt/retropie/configs/megadrive-japan/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/megadrive-japan/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/megadrive-japan/retroarch.cfg /opt/retropie/configs/megadrive-japan/retroarch.cfg.bkp
-    cat /opt/retropie/configs/megadrive-japan/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/megadrive-japan/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Sega-Mega-Drive-Japan.cfg"' /opt/retropie/configs/megadrive-japan/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/megadrive-japan/retroarch.cfg
+    cp /opt/ares/configs/megadrive-japan/retroarch.cfg /opt/ares/configs/megadrive-japan/retroarch.cfg.bkp
+    cat /opt/ares/configs/megadrive-japan/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/megadrive-japan/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Sega-Mega-Drive-Japan.cfg"' /opt/ares/configs/megadrive-japan/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/megadrive-japan/retroarch.cfg
   else
-    cp /opt/retropie/configs/megadrive-japan/retroarch.cfg /opt/retropie/configs/megadrive-japan/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Sega-Mega-Drive-Japan.cfg"' /opt/retropie/configs/megadrive-japan/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/megadrive-japan/retroarch.cfg
+    cp /opt/ares/configs/megadrive-japan/retroarch.cfg /opt/ares/configs/megadrive-japan/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Sega-Mega-Drive-Japan.cfg"' /opt/ares/configs/megadrive-japan/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/megadrive-japan/retroarch.cfg
   fi
   ;;
 n64)
-  ifexist=`cat /opt/retropie/configs/n64/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/n64/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/n64/retroarch.cfg /opt/retropie/configs/n64/retroarch.cfg.bkp
-    cat /opt/retropie/configs/n64/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/n64/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Nintendo-64.cfg"' /opt/retropie/configs/n64/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/n64/retroarch.cfg
+    cp /opt/ares/configs/n64/retroarch.cfg /opt/ares/configs/n64/retroarch.cfg.bkp
+    cat /opt/ares/configs/n64/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/n64/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Nintendo-64.cfg"' /opt/ares/configs/n64/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/n64/retroarch.cfg
   else
-    cp /opt/retropie/configs/n64/retroarch.cfg /opt/retropie/configs/n64/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Nintendo-64.cfg"' /opt/retropie/configs/n64/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/n64/retroarch.cfg
+    cp /opt/ares/configs/n64/retroarch.cfg /opt/ares/configs/n64/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Nintendo-64.cfg"' /opt/ares/configs/n64/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/n64/retroarch.cfg
   fi
   ;;
 nds)
-  ifexist=`cat /opt/retropie/configs/nds/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/nds/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/nds/retroarch.cfg /opt/retropie/configs/nds/retroarch.cfg.bkp
-    cat /opt/retropie/configs/nds/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/nds/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Nintendo-DS.cfg"' /opt/retropie/configs/nds/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/nds/retroarch.cfg
+    cp /opt/ares/configs/nds/retroarch.cfg /opt/ares/configs/nds/retroarch.cfg.bkp
+    cat /opt/ares/configs/nds/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/nds/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Nintendo-DS.cfg"' /opt/ares/configs/nds/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/nds/retroarch.cfg
   else
-    cp /opt/retropie/configs/nds/retroarch.cfg /opt/retropie/configs/nds/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Nintendo-DS.cfg"' /opt/retropie/configs/nds/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/nds/retroarch.cfg
+    cp /opt/ares/configs/nds/retroarch.cfg /opt/ares/configs/nds/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Nintendo-DS.cfg"' /opt/ares/configs/nds/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/nds/retroarch.cfg
   fi
   ;;
 naomi)
-  ifexist=`cat /opt/retropie/configs/naomi/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/naomi/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/naomi/retroarch.cfg /opt/retropie/configs/naomi/retroarch.cfg.bkp
-    cat /opt/retropie/configs/naomi/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/naomi/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Naomi.cfg"' /opt/retropie/configs/naomi/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/naomi/retroarch.cfg
+    cp /opt/ares/configs/naomi/retroarch.cfg /opt/ares/configs/naomi/retroarch.cfg.bkp
+    cat /opt/ares/configs/naomi/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/naomi/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Naomi.cfg"' /opt/ares/configs/naomi/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/naomi/retroarch.cfg
   else
-    cp /opt/retropie/configs/naomi/retroarch.cfg /opt/retropie/configs/naomi/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Naomi.cfg"' /opt/retropie/configs/naomi/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/naomi/retroarch.cfg
+    cp /opt/ares/configs/naomi/retroarch.cfg /opt/ares/configs/naomi/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Naomi.cfg"' /opt/ares/configs/naomi/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/naomi/retroarch.cfg
   fi
   ;;
 neogeo)
-  ifexist=`cat /opt/retropie/configs/neogeo/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/neogeo/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/neogeo/retroarch.cfg /opt/retropie/configs/neogeo/retroarch.cfg.bkp
-    cat /opt/retropie/configs/neogeo/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/neogeo/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/MAME-Horizontal.cfg"' /opt/retropie/configs/neogeo/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/neogeo/retroarch.cfg
+    cp /opt/ares/configs/neogeo/retroarch.cfg /opt/ares/configs/neogeo/retroarch.cfg.bkp
+    cat /opt/ares/configs/neogeo/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/neogeo/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/MAME-Horizontal.cfg"' /opt/ares/configs/neogeo/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/neogeo/retroarch.cfg
   else
-    cp /opt/retropie/configs/neogeo/retroarch.cfg /opt/retropie/configs/neogeo/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/MAME-Horizontal.cfg"' /opt/retropie/configs/neogeo/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/neogeo/retroarch.cfg
+    cp /opt/ares/configs/neogeo/retroarch.cfg /opt/ares/configs/neogeo/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/MAME-Horizontal.cfg"' /opt/ares/configs/neogeo/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/neogeo/retroarch.cfg
   fi
   ;;
 nes)
-  ifexist=`cat /opt/retropie/configs/nes/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/nes/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/nes/retroarch.cfg /opt/retropie/configs/nes/retroarch.cfg.bkp
-    cat /opt/retropie/configs/nes/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport |grep -v force_aspect > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/nes/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Nintendo-Entertainment-System.cfg"' /opt/retropie/configs/nes/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/nes/retroarch.cfg
-    sed -i '4i aspect_ratio_index = "16"' /opt/retropie/configs/nes/retroarch.cfg
-    sed -i '5i video_force_aspect = "true"' /opt/retropie/configs/nes/retroarch.cfg
-    sed -i '6i video_aspect_ratio = "-1.000000"' /opt/retropie/configs/nes/retroarch.cfg
+    cp /opt/ares/configs/nes/retroarch.cfg /opt/ares/configs/nes/retroarch.cfg.bkp
+    cat /opt/ares/configs/nes/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport |grep -v force_aspect > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/nes/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Nintendo-Entertainment-System.cfg"' /opt/ares/configs/nes/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/nes/retroarch.cfg
+    sed -i '4i aspect_ratio_index = "16"' /opt/ares/configs/nes/retroarch.cfg
+    sed -i '5i video_force_aspect = "true"' /opt/ares/configs/nes/retroarch.cfg
+    sed -i '6i video_aspect_ratio = "-1.000000"' /opt/ares/configs/nes/retroarch.cfg
   else
-    cp /opt/retropie/configs/nes/retroarch.cfg /opt/retropie/configs/nes/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Nintendo-Entertainment-System.cfg"' /opt/retropie/configs/nes/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/nes/retroarch.cfg
-    sed -i '4i aspect_ratio_index = "16"' /opt/retropie/configs/nes/retroarch.cfg
-    sed -i '5i video_force_aspect = "true"' /opt/retropie/configs/nes/retroarch.cfg
-    sed -i '6i video_aspect_ratio = "-1.000000"' /opt/retropie/configs/nes/retroarch.cfg
+    cp /opt/ares/configs/nes/retroarch.cfg /opt/ares/configs/nes/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Nintendo-Entertainment-System.cfg"' /opt/ares/configs/nes/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/nes/retroarch.cfg
+    sed -i '4i aspect_ratio_index = "16"' /opt/ares/configs/nes/retroarch.cfg
+    sed -i '5i video_force_aspect = "true"' /opt/ares/configs/nes/retroarch.cfg
+    sed -i '6i video_aspect_ratio = "-1.000000"' /opt/ares/configs/nes/retroarch.cfg
   fi
   ;;
 pce-cd)
-  ifexist=`cat /opt/retropie/configs/pce-cd/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/pce-cd/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/pce-cd/retroarch.cfg /opt/retropie/configs/pce-cd/retroarch.cfg.bkp
-    cat /opt/retropie/configs/pce-cd/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/pce-cd/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/NEC-PC-Engine-CD.cfg"' /opt/retropie/configs/pce-cd/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/pce-cd/retroarch.cfg
+    cp /opt/ares/configs/pce-cd/retroarch.cfg /opt/ares/configs/pce-cd/retroarch.cfg.bkp
+    cat /opt/ares/configs/pce-cd/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/pce-cd/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/NEC-PC-Engine-CD.cfg"' /opt/ares/configs/pce-cd/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/pce-cd/retroarch.cfg
   else
-    cp /opt/retropie/configs/pce-cd/retroarch.cfg /opt/retropie/configs/pce-cd/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/NEC-PC-Engine-CD.cfg"' /opt/retropie/configs/pce-cd/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/pce-cd/retroarch.cfg
+    cp /opt/ares/configs/pce-cd/retroarch.cfg /opt/ares/configs/pce-cd/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/NEC-PC-Engine-CD.cfg"' /opt/ares/configs/pce-cd/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/pce-cd/retroarch.cfg
   fi
   ;;
 pcengine)
-  ifexist=`cat /opt/retropie/configs/pcengine/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/pcengine/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/pcengine/retroarch.cfg /opt/retropie/configs/pcengine/retroarch.cfg.bkp
-    cat /opt/retropie/configs/pcengine/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/pcengine/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/NEC-PC-Engine.cfg"' /opt/retropie/configs/pcengine/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/pcengine/retroarch.cfg
+    cp /opt/ares/configs/pcengine/retroarch.cfg /opt/ares/configs/pcengine/retroarch.cfg.bkp
+    cat /opt/ares/configs/pcengine/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/pcengine/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/NEC-PC-Engine.cfg"' /opt/ares/configs/pcengine/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/pcengine/retroarch.cfg
   else
-    cp /opt/retropie/configs/pcengine/retroarch.cfg /opt/retropie/configs/pcengine/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/NEC-PC-Engine.cfg"' /opt/retropie/configs/pcengine/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/pcengine/retroarch.cfg
+    cp /opt/ares/configs/pcengine/retroarch.cfg /opt/ares/configs/pcengine/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/NEC-PC-Engine.cfg"' /opt/ares/configs/pcengine/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/pcengine/retroarch.cfg
   fi
   ;;
 pico)
-  ifexist=`cat /opt/retropie/configs/pico/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/pico/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/pico/retroarch.cfg /opt/retropie/configs/pico/retroarch.cfg.bkp
-    cat /opt/retropie/configs/pico/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/pico/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Sega-Mega-Drive.cfg"' /opt/retropie/configs/pico/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/pico/retroarch.cfg
+    cp /opt/ares/configs/pico/retroarch.cfg /opt/ares/configs/pico/retroarch.cfg.bkp
+    cat /opt/ares/configs/pico/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/pico/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Sega-Mega-Drive.cfg"' /opt/ares/configs/pico/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/pico/retroarch.cfg
   else
-    cp /opt/retropie/configs/pico/retroarch.cfg /opt/retropie/configs/pico/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Sega-Pico.cfg"' /opt/retropie/configs/pico/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/pico/retroarch.cfg
+    cp /opt/ares/configs/pico/retroarch.cfg /opt/ares/configs/pico/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Sega-Pico.cfg"' /opt/ares/configs/pico/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/pico/retroarch.cfg
   fi
   ;;
 psx)
-  ifexist=`cat /opt/retropie/configs/psx/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/psx/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/psx/retroarch.cfg /opt/retropie/configs/psx/retroarch.cfg.bkp
-    cat /opt/retropie/configs/psx/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/psx/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Sony-PlayStation.cfg"' /opt/retropie/configs/psx/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/psx/retroarch.cfg
+    cp /opt/ares/configs/psx/retroarch.cfg /opt/ares/configs/psx/retroarch.cfg.bkp
+    cat /opt/ares/configs/psx/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/psx/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Sony-PlayStation.cfg"' /opt/ares/configs/psx/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/psx/retroarch.cfg
   else
-    cp /opt/retropie/configs/psx/retroarch.cfg /opt/retropie/configs/psx/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Sony-PlayStation.cfg"' /opt/retropie/configs/psx/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/psx/retroarch.cfg
+    cp /opt/ares/configs/psx/retroarch.cfg /opt/ares/configs/psx/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Sony-PlayStation.cfg"' /opt/ares/configs/psx/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/psx/retroarch.cfg
   fi
   ;;
 saturn)
-  ifexist=`cat /opt/retropie/configs/saturn/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/saturn/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/saturn/retroarch.cfg /opt/retropie/configs/saturn/retroarch.cfg.bkp
-    cat /opt/retropie/configs/saturn/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/saturn/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Sega-Saturn.cfg"' /opt/retropie/configs/saturn/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/saturn/retroarch.cfg
+    cp /opt/ares/configs/saturn/retroarch.cfg /opt/ares/configs/saturn/retroarch.cfg.bkp
+    cat /opt/ares/configs/saturn/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/saturn/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Sega-Saturn.cfg"' /opt/ares/configs/saturn/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/saturn/retroarch.cfg
   else
-    cp /opt/retropie/configs/saturn/retroarch.cfg /opt/retropie/configs/saturn/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Sega-Saturn.cfg"' /opt/retropie/configs/saturn/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/saturn/retroarch.cfg
+    cp /opt/ares/configs/saturn/retroarch.cfg /opt/ares/configs/saturn/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Sega-Saturn.cfg"' /opt/ares/configs/saturn/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/saturn/retroarch.cfg
   fi
   ;;
 sega32x)
-  ifexist=`cat /opt/retropie/configs/sega32x/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/sega32x/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/sega32x/retroarch.cfg /opt/retropie/configs/sega32x/retroarch.cfg.bkp
-    cat /opt/retropie/configs/sega32x/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/sega32x/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Sega-32X.cfg"' /opt/retropie/configs/sega32x/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/sega32x/retroarch.cfg
+    cp /opt/ares/configs/sega32x/retroarch.cfg /opt/ares/configs/sega32x/retroarch.cfg.bkp
+    cat /opt/ares/configs/sega32x/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/sega32x/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Sega-32X.cfg"' /opt/ares/configs/sega32x/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/sega32x/retroarch.cfg
   else
-    cp /opt/retropie/configs/sega32x/retroarch.cfg /opt/retropie/configs/sega32x/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Sega-32X.cfg"' /opt/retropie/configs/sega32x/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/sega32x/retroarch.cfg
+    cp /opt/ares/configs/sega32x/retroarch.cfg /opt/ares/configs/sega32x/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Sega-32X.cfg"' /opt/ares/configs/sega32x/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/sega32x/retroarch.cfg
   fi
   ;;
 segacd)
-  ifexist=`cat /opt/retropie/configs/segacd/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/segacd/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/segacd/retroarch.cfg /opt/retropie/configs/segacd/retroarch.cfg.bkp
-    cat /opt/retropie/configs/segacd/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/segacd/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Sega-CD.cfg"' /opt/retropie/configs/segacd/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/segacd/retroarch.cfg
+    cp /opt/ares/configs/segacd/retroarch.cfg /opt/ares/configs/segacd/retroarch.cfg.bkp
+    cat /opt/ares/configs/segacd/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/segacd/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Sega-CD.cfg"' /opt/ares/configs/segacd/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/segacd/retroarch.cfg
   else
-    cp /opt/retropie/configs/segacd/retroarch.cfg /opt/retropie/configs/segacd/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Sega-CD.cfg"' /opt/retropie/configs/segacd/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/segacd/retroarch.cfg
+    cp /opt/ares/configs/segacd/retroarch.cfg /opt/ares/configs/segacd/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Sega-CD.cfg"' /opt/ares/configs/segacd/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/segacd/retroarch.cfg
   fi
   ;;
 sfc)
-  ifexist=`cat /opt/retropie/configs/sfc/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/sfc/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/sfc/retroarch.cfg /opt/retropie/configs/sfc/retroarch.cfg.bkp
-    cat /opt/retropie/configs/sfc/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/sfc/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Nintendo-Super-Famicom.cfg"' /opt/retropie/configs/sfc/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/sfc/retroarch.cfg
+    cp /opt/ares/configs/sfc/retroarch.cfg /opt/ares/configs/sfc/retroarch.cfg.bkp
+    cat /opt/ares/configs/sfc/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/sfc/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Nintendo-Super-Famicom.cfg"' /opt/ares/configs/sfc/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/sfc/retroarch.cfg
   else
-    cp /opt/retropie/configs/sfc/retroarch.cfg /opt/retropie/configs/sfc/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Nintendo-Super-Famicom.cfg"' /opt/retropie/configs/sfc/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/sfc/retroarch.cfg
+    cp /opt/ares/configs/sfc/retroarch.cfg /opt/ares/configs/sfc/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Nintendo-Super-Famicom.cfg"' /opt/ares/configs/sfc/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/sfc/retroarch.cfg
   fi
   ;;
 sg-1000)
-  ifexist=`cat /opt/retropie/configs/sg-1000/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/sg-1000/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/sg-1000/retroarch.cfg /opt/retropie/configs/sg-1000/retroarch.cfg.bkp
-    cat /opt/retropie/configs/sg-1000/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/sg-1000/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Sega-SG-1000.cfg"' /opt/retropie/configs/sg-1000/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/sg-1000/retroarch.cfg
+    cp /opt/ares/configs/sg-1000/retroarch.cfg /opt/ares/configs/sg-1000/retroarch.cfg.bkp
+    cat /opt/ares/configs/sg-1000/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/sg-1000/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Sega-SG-1000.cfg"' /opt/ares/configs/sg-1000/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/sg-1000/retroarch.cfg
   else
-    cp /opt/retropie/configs/sg-1000/retroarch.cfg /opt/retropie/configs/sg-1000/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Sega-SG-1000.cfg"' /opt/retropie/configs/sg-1000/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/sg-1000/retroarch.cfg
+    cp /opt/ares/configs/sg-1000/retroarch.cfg /opt/ares/configs/sg-1000/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Sega-SG-1000.cfg"' /opt/ares/configs/sg-1000/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/sg-1000/retroarch.cfg
   fi
   ;;
 snes)
-  ifexist=`cat /opt/retropie/configs/snes/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/snes/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/snes/retroarch.cfg /opt/retropie/configs/snes/retroarch.cfg.bkp
-    cat /opt/retropie/configs/snes/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/snes/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Super-Nintendo-Entertainment-System.cfg"' /opt/retropie/configs/snes/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/snes/retroarch.cfg
+    cp /opt/ares/configs/snes/retroarch.cfg /opt/ares/configs/snes/retroarch.cfg.bkp
+    cat /opt/ares/configs/snes/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/snes/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Super-Nintendo-Entertainment-System.cfg"' /opt/ares/configs/snes/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/snes/retroarch.cfg
   else
-    cp /opt/retropie/configs/snes/retroarch.cfg /opt/retropie/configs/snes/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Super-Nintendo-Entertainment-System.cfg"' /opt/retropie/configs/snes/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/snes/retroarch.cfg
+    cp /opt/ares/configs/snes/retroarch.cfg /opt/ares/configs/snes/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Super-Nintendo-Entertainment-System.cfg"' /opt/ares/configs/snes/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/snes/retroarch.cfg
   fi
   ;;
 supergrafx)
-  ifexist=`cat /opt/retropie/configs/supergrafx/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/supergrafx/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/supergrafx/retroarch.cfg /opt/retropie/configs/supergrafx/retroarch.cfg.bkp
-    cat /opt/retropie/configs/supergrafx/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/supergrafx/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/NEC-SuperGrafx.cfg"' /opt/retropie/configs/supergrafx/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/supergrafx/retroarch.cfg
+    cp /opt/ares/configs/supergrafx/retroarch.cfg /opt/ares/configs/supergrafx/retroarch.cfg.bkp
+    cat /opt/ares/configs/supergrafx/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/supergrafx/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/NEC-SuperGrafx.cfg"' /opt/ares/configs/supergrafx/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/supergrafx/retroarch.cfg
   else
-    cp /opt/retropie/configs/supergrafx/retroarch.cfg /opt/retropie/configs/supergrafx/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/NEC-SuperGrafx.cfg"' /opt/retropie/configs/supergrafx/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/supergrafx/retroarch.cfg
+    cp /opt/ares/configs/supergrafx/retroarch.cfg /opt/ares/configs/supergrafx/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/NEC-SuperGrafx.cfg"' /opt/ares/configs/supergrafx/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/supergrafx/retroarch.cfg
   fi
   ;;
 tg16)
-  ifexist=`cat /opt/retropie/configs/tg16/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/tg16/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/tg16/retroarch.cfg /opt/retropie/configs/tg16/retroarch.cfg.bkp
-    cat /opt/retropie/configs/tg16/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/tg16/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/NEC-TurboGrafx-16.cfg"' /opt/retropie/configs/tg16/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/tg16/retroarch.cfg
+    cp /opt/ares/configs/tg16/retroarch.cfg /opt/ares/configs/tg16/retroarch.cfg.bkp
+    cat /opt/ares/configs/tg16/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/tg16/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/NEC-TurboGrafx-16.cfg"' /opt/ares/configs/tg16/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/tg16/retroarch.cfg
   else
-    cp /opt/retropie/configs/tg16/retroarch.cfg /opt/retropie/configs/tg16/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/NEC-TurboGrafx-16.cfg"' /opt/retropie/configs/tg16/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/tg16/retroarch.cfg
+    cp /opt/ares/configs/tg16/retroarch.cfg /opt/ares/configs/tg16/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/NEC-TurboGrafx-16.cfg"' /opt/ares/configs/tg16/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/tg16/retroarch.cfg
   fi
   ;;
 tg-cd)
-  ifexist=`cat /opt/retropie/configs/tg-cd/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/tg-cd/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/tg-cd/retroarch.cfg /opt/retropie/configs/tg-cd/retroarch.cfg.bkp
-    cat /opt/retropie/configs/tg-cd/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/tg-cd/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/NEC-TurboGrafx-CD.cfg"' /opt/retropie/configs/tg-cd/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/tg-cd/retroarch.cfg
+    cp /opt/ares/configs/tg-cd/retroarch.cfg /opt/ares/configs/tg-cd/retroarch.cfg.bkp
+    cat /opt/ares/configs/tg-cd/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/tg-cd/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/NEC-TurboGrafx-CD.cfg"' /opt/ares/configs/tg-cd/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/tg-cd/retroarch.cfg
   else
-    cp /opt/retropie/configs/tg-cd/retroarch.cfg /opt/retropie/configs/tg-cd/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/NEC-TurboGrafx-CD.cfg"' /opt/retropie/configs/tg-cd/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/tg-cd/retroarch.cfg
+    cp /opt/ares/configs/tg-cd/retroarch.cfg /opt/ares/configs/tg-cd/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/NEC-TurboGrafx-CD.cfg"' /opt/ares/configs/tg-cd/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/tg-cd/retroarch.cfg
   fi
   ;;
 gcevectrex)
-  ifexist=`cat /opt/retropie/configs/vectrex/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/vectrex/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/vectrex/retroarch.cfg /opt/retropie/configs/vectrex/retroarch.cfg.bkp
-    cat /opt/retropie/configs/vectrex/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/vectrex/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/GCE-Vectrex.cfg"' /opt/retropie/configs/vectrex/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/vectrex/retroarch.cfg
+    cp /opt/ares/configs/vectrex/retroarch.cfg /opt/ares/configs/vectrex/retroarch.cfg.bkp
+    cat /opt/ares/configs/vectrex/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/vectrex/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/GCE-Vectrex.cfg"' /opt/ares/configs/vectrex/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/vectrex/retroarch.cfg
   else
-    cp /opt/retropie/configs/vectrex/retroarch.cfg /opt/retropie/configs/vectrex/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/GCE-Vectrex.cfg"' /opt/retropie/configs/vectrex/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/vectrex/retroarch.cfg
+    cp /opt/ares/configs/vectrex/retroarch.cfg /opt/ares/configs/vectrex/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/GCE-Vectrex.cfg"' /opt/ares/configs/vectrex/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/vectrex/retroarch.cfg
   fi
   ;;
 atarilynx)
-  ifexist=`cat /opt/retropie/configs/atarilynx/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/atarilynx/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/atarilynx/retroarch.cfg /opt/retropie/configs/atarilynx/retroarch.cfg.bkp
-    cat /opt/retropie/configs/atarilynx/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/atarilynx/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Atari-Lynx-Horizontal.cfg"' /opt/retropie/configs/atarilynx/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/atarilynx/retroarch.cfg
+    cp /opt/ares/configs/atarilynx/retroarch.cfg /opt/ares/configs/atarilynx/retroarch.cfg.bkp
+    cat /opt/ares/configs/atarilynx/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/atarilynx/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Atari-Lynx-Horizontal.cfg"' /opt/ares/configs/atarilynx/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/atarilynx/retroarch.cfg
   else
-    cp /opt/retropie/configs/atarilynx/retroarch.cfg /opt/retropie/configs/atarilynx/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Atari-Lynx-Horizontal.cfg"' /opt/retropie/configs/atarilynx/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/atarilynx/retroarch.cfg
+    cp /opt/ares/configs/atarilynx/retroarch.cfg /opt/ares/configs/atarilynx/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Atari-Lynx-Horizontal.cfg"' /opt/ares/configs/atarilynx/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/atarilynx/retroarch.cfg
   fi
   ;;
 gamegear)
-  ifexist=`cat /opt/retropie/configs/gamegear/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/gamegear/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/gamegear/retroarch.cfg /opt/retropie/configs/gamegear/retroarch.cfg.bkp
-    cat /opt/retropie/configs/gamegear/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/gamegear/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Sega-Game-Gear.cfg"' /opt/retropie/configs/gamegear/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/gamegear/retroarch.cfg
+    cp /opt/ares/configs/gamegear/retroarch.cfg /opt/ares/configs/gamegear/retroarch.cfg.bkp
+    cat /opt/ares/configs/gamegear/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/gamegear/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Sega-Game-Gear.cfg"' /opt/ares/configs/gamegear/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/gamegear/retroarch.cfg
   else
-    cp /opt/retropie/configs/gamegear/retroarch.cfg /opt/retropie/configs/gamegear/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Sega-Game-Gear.cfg"' /opt/retropie/configs/gamegear/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/gamegear/retroarch.cfg
+    cp /opt/ares/configs/gamegear/retroarch.cfg /opt/ares/configs/gamegear/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Sega-Game-Gear.cfg"' /opt/ares/configs/gamegear/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/gamegear/retroarch.cfg
   fi
   ;;
 gb)
-  ifexist=`cat /opt/retropie/configs/gb/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/gb/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/gb/retroarch.cfg /opt/retropie/configs/gb/retroarch.cfg.bkp
-    cat /opt/retropie/configs/gb/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/gb/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Nintendo-Game-Boy.cfg"' /opt/retropie/configs/gb/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/gb/retroarch.cfg
+    cp /opt/ares/configs/gb/retroarch.cfg /opt/ares/configs/gb/retroarch.cfg.bkp
+    cat /opt/ares/configs/gb/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/gb/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Nintendo-Game-Boy.cfg"' /opt/ares/configs/gb/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/gb/retroarch.cfg
   else
-    cp /opt/retropie/configs/gb/retroarch.cfg /opt/retropie/configs/gb/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Nintendo-Game-Boy.cfg"' /opt/retropie/configs/gb/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/gb/retroarch.cfg
+    cp /opt/ares/configs/gb/retroarch.cfg /opt/ares/configs/gb/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Nintendo-Game-Boy.cfg"' /opt/ares/configs/gb/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/gb/retroarch.cfg
   fi
   ;;
 gba)
-  ifexist=`cat /opt/retropie/configs/gba/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/gba/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/gba/retroarch.cfg /opt/retropie/configs/gba/retroarch.cfg.bkp
-    cat /opt/retropie/configs/gba/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/gba/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Nintendo-Game-Boy-Advance.cfg"' /opt/retropie/configs/gba/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/gba/retroarch.cfg
+    cp /opt/ares/configs/gba/retroarch.cfg /opt/ares/configs/gba/retroarch.cfg.bkp
+    cat /opt/ares/configs/gba/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/gba/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Nintendo-Game-Boy-Advance.cfg"' /opt/ares/configs/gba/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/gba/retroarch.cfg
   else
-    cp /opt/retropie/configs/gba/retroarch.cfg /opt/retropie/configs/gba/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Nintendo-Game-Boy-Advance.cfg"' /opt/retropie/configs/gba/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/gba/retroarch.cfg
+    cp /opt/ares/configs/gba/retroarch.cfg /opt/ares/configs/gba/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Nintendo-Game-Boy-Advance.cfg"' /opt/ares/configs/gba/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/gba/retroarch.cfg
   fi
   ;;
 gbc)
-  ifexist=`cat /opt/retropie/configs/gbc/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/gbc/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/gbc/retroarch.cfg /opt/retropie/configs/gbc/retroarch.cfg.bkp
-    cat /opt/retropie/configs/gbc/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/gbc/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Nintendo-Game-Boy-Color.cfg"' /opt/retropie/configs/gbc/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/gbc/retroarch.cfg
+    cp /opt/ares/configs/gbc/retroarch.cfg /opt/ares/configs/gbc/retroarch.cfg.bkp
+    cat /opt/ares/configs/gbc/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/gbc/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Nintendo-Game-Boy-Color.cfg"' /opt/ares/configs/gbc/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/gbc/retroarch.cfg
   else
-    cp /opt/retropie/configs/gbc/retroarch.cfg /opt/retropie/configs/gbc/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Nintendo-Game-Boy-Color.cfg"' /opt/retropie/configs/gbc/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/gbc/retroarch.cfg
+    cp /opt/ares/configs/gbc/retroarch.cfg /opt/ares/configs/gbc/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Nintendo-Game-Boy-Color.cfg"' /opt/ares/configs/gbc/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/gbc/retroarch.cfg
   fi
   ;;
 ngp)
-  ifexist=`cat /opt/retropie/configs/ngp/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/ngp/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/ngp/retroarch.cfg /opt/retropie/configs/ngp/retroarch.cfg.bkp
-    cat /opt/retropie/configs/ngp/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/ngp/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/SNK-Neo-Geo-Pocket.cfg"' /opt/retropie/configs/ngp/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/ngp/retroarch.cfg
+    cp /opt/ares/configs/ngp/retroarch.cfg /opt/ares/configs/ngp/retroarch.cfg.bkp
+    cat /opt/ares/configs/ngp/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/ngp/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/SNK-Neo-Geo-Pocket.cfg"' /opt/ares/configs/ngp/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/ngp/retroarch.cfg
   else
-    cp /opt/retropie/configs/ngp/retroarch.cfg /opt/retropie/configs/ngp/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/SNK-Neo-Geo-Pocket.cfg"' /opt/retropie/configs/ngp/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/ngp/retroarch.cfg
+    cp /opt/ares/configs/ngp/retroarch.cfg /opt/ares/configs/ngp/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/SNK-Neo-Geo-Pocket.cfg"' /opt/ares/configs/ngp/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/ngp/retroarch.cfg
   fi
   ;;
 ngpc)
-  ifexist=`cat /opt/retropie/configs/ngpc/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/ngpc/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/ngpc/retroarch.cfg /opt/retropie/configs/ngpc/retroarch.cfg.bkp
-    cat /opt/retropie/configs/ngpc/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/ngpc/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/SNK-Neo-Geo-Pocket-Color.cfg"' /opt/retropie/configs/ngpc/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/ngpc/retroarch.cfg
+    cp /opt/ares/configs/ngpc/retroarch.cfg /opt/ares/configs/ngpc/retroarch.cfg.bkp
+    cat /opt/ares/configs/ngpc/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/ngpc/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/SNK-Neo-Geo-Pocket-Color.cfg"' /opt/ares/configs/ngpc/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/ngpc/retroarch.cfg
   else
-    cp /opt/retropie/configs/ngpc/retroarch.cfg /opt/retropie/configs/ngpc/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/SNK-Neo-Geo-Pocket-Color.cfg"' /opt/retropie/configs/ngpc/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/ngpc/retroarch.cfg
+    cp /opt/ares/configs/ngpc/retroarch.cfg /opt/ares/configs/ngpc/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/SNK-Neo-Geo-Pocket-Color.cfg"' /opt/ares/configs/ngpc/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/ngpc/retroarch.cfg
   fi
   ;;
 psp)
-  ifexist=`cat /opt/retropie/configs/psp/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/psp/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/psp/retroarch.cfg /opt/retropie/configs/psp/retroarch.cfg.bkp
-    cat /opt/retropie/configs/psp/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/psp/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Sony-PSP.cfg"' /opt/retropie/configs/psp/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/psp/retroarch.cfg
+    cp /opt/ares/configs/psp/retroarch.cfg /opt/ares/configs/psp/retroarch.cfg.bkp
+    cat /opt/ares/configs/psp/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/psp/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Sony-PSP.cfg"' /opt/ares/configs/psp/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/psp/retroarch.cfg
   else
-    cp /opt/retropie/configs/psp/retroarch.cfg /opt/retropie/configs/psp/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Sony-PSP.cfg"' /opt/retropie/configs/psp/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/psp/retroarch.cfg
+    cp /opt/ares/configs/psp/retroarch.cfg /opt/ares/configs/psp/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Sony-PSP.cfg"' /opt/ares/configs/psp/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/psp/retroarch.cfg
   fi
   ;;
 pspminis)
-  ifexist=`cat /opt/retropie/configs/pspminis/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/pspminis/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/pspminis/retroarch.cfg /opt/retropie/configs/pspminis/retroarch.cfg.bkp
-    cat /opt/retropie/configs/pspminis/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/pspminis/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Sony-PSP.cfg"' /opt/retropie/configs/pspminis/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/pspminis/retroarch.cfg
+    cp /opt/ares/configs/pspminis/retroarch.cfg /opt/ares/configs/pspminis/retroarch.cfg.bkp
+    cat /opt/ares/configs/pspminis/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/pspminis/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Sony-PSP.cfg"' /opt/ares/configs/pspminis/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/pspminis/retroarch.cfg
   else
-    cp /opt/retropie/configs/pspminis/retroarch.cfg /opt/retropie/configs/pspminis/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Sony-PSP.cfg"' /opt/retropie/configs/pspminis/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/pspminis/retroarch.cfg
+    cp /opt/ares/configs/pspminis/retroarch.cfg /opt/ares/configs/pspminis/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Sony-PSP.cfg"' /opt/ares/configs/pspminis/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/pspminis/retroarch.cfg
   fi
   ;;
 virtualboy)
-  ifexist=`cat /opt/retropie/configs/virtualboy/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/virtualboy/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/virtualboy/retroarch.cfg /opt/retropie/configs/virtualboy/retroarch.cfg.bkp
-    cat /opt/retropie/configs/virtualboy/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/virtualboy/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Nintendo-Virtual-Boy.cfg"' /opt/retropie/configs/virtualboy/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/virtualboy/retroarch.cfg
+    cp /opt/ares/configs/virtualboy/retroarch.cfg /opt/ares/configs/virtualboy/retroarch.cfg.bkp
+    cat /opt/ares/configs/virtualboy/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/virtualboy/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Nintendo-Virtual-Boy.cfg"' /opt/ares/configs/virtualboy/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/virtualboy/retroarch.cfg
   else
-    cp /opt/retropie/configs/virtualboy/retroarch.cfg /opt/retropie/configs/virtualboy/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Nintendo-Virtual-Boy.cfg"' /opt/retropie/configs/virtualboy/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/virtualboy/retroarch.cfg
+    cp /opt/ares/configs/virtualboy/retroarch.cfg /opt/ares/configs/virtualboy/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Nintendo-Virtual-Boy.cfg"' /opt/ares/configs/virtualboy/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/virtualboy/retroarch.cfg
   fi
   ;;
 wonderswan)
-  ifexist=`cat /opt/retropie/configs/wonderswan/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/wonderswan/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/wonderswan/retroarch.cfg /opt/retropie/configs/wonderswan/retroarch.cfg.bkp
-    cat /opt/retropie/configs/wonderswan/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/wonderswan/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Bandai-WonderSwan-Horizontal.cfg"' /opt/retropie/configs/wonderswan/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/wonderswan/retroarch.cfg
+    cp /opt/ares/configs/wonderswan/retroarch.cfg /opt/ares/configs/wonderswan/retroarch.cfg.bkp
+    cat /opt/ares/configs/wonderswan/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/wonderswan/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Bandai-WonderSwan-Horizontal.cfg"' /opt/ares/configs/wonderswan/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/wonderswan/retroarch.cfg
   else
-    cp /opt/retropie/configs/wonderswan/retroarch.cfg /opt/retropie/configs/wonderswan/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Bandai-WonderSwan-Horizontal.cfg"' /opt/retropie/configs/wonderswan/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/wonderswan/retroarch.cfg
+    cp /opt/ares/configs/wonderswan/retroarch.cfg /opt/ares/configs/wonderswan/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Bandai-WonderSwan-Horizontal.cfg"' /opt/ares/configs/wonderswan/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/wonderswan/retroarch.cfg
   fi
   ;;
 wonderswancolor)
-  ifexist=`cat /opt/retropie/configs/wonderswancolor/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/wonderswancolor/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/wonderswancolor/retroarch.cfg /opt/retropie/configs/wonderswancolor/retroarch.cfg.bkp
-    cat /opt/retropie/configs/wonderswancolor/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/wonderswancolor/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Bandai-WonderSwan—Color-Horizontal.cfg"' /opt/retropie/configs/wonderswancolor/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/wonderswancolor/retroarch.cfg
+    cp /opt/ares/configs/wonderswancolor/retroarch.cfg /opt/ares/configs/wonderswancolor/retroarch.cfg.bkp
+    cat /opt/ares/configs/wonderswancolor/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/wonderswancolor/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Bandai-WonderSwan—Color-Horizontal.cfg"' /opt/ares/configs/wonderswancolor/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/wonderswancolor/retroarch.cfg
   else
-    cp /opt/retropie/configs/wonderswancolor/retroarch.cfg /opt/retropie/configs/wonderswancolor/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Bandai-WonderSwan—Color-Horizontal.cfg"' /opt/retropie/configs/wonderswancolor/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/wonderswancolor/retroarch.cfg
+    cp /opt/ares/configs/wonderswancolor/retroarch.cfg /opt/ares/configs/wonderswancolor/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Bandai-WonderSwan—Color-Horizontal.cfg"' /opt/ares/configs/wonderswancolor/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/wonderswancolor/retroarch.cfg
   fi
   ;;
 amstradcpc)
-  ifexist=`cat /opt/retropie/configs/amstradcpc/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/amstradcpc/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/amstradcpc/retroarch.cfg /opt/retropie/configs/amstradcpc/retroarch.cfg.bkp
-    cat /opt/retropie/configs/amstradcpc/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/amstradcpc/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Amstrad-CPC.cfg"' /opt/retropie/configs/amstradcpc/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/amstradcpc/retroarch.cfg
+    cp /opt/ares/configs/amstradcpc/retroarch.cfg /opt/ares/configs/amstradcpc/retroarch.cfg.bkp
+    cat /opt/ares/configs/amstradcpc/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/amstradcpc/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Amstrad-CPC.cfg"' /opt/ares/configs/amstradcpc/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/amstradcpc/retroarch.cfg
   else
-    cp /opt/retropie/configs/amstradcpc/retroarch.cfg /opt/retropie/configs/amstradcpc/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Amstrad-CPC.cfg"' /opt/retropie/configs/amstradcpc/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/amstradcpc/retroarch.cfg
+    cp /opt/ares/configs/amstradcpc/retroarch.cfg /opt/ares/configs/amstradcpc/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Amstrad-CPC.cfg"' /opt/ares/configs/amstradcpc/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/amstradcpc/retroarch.cfg
   fi
   ;;
 atari800)
-  ifexist=`cat /opt/retropie/configs/atari800/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/atari800/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/atari800/retroarch.cfg /opt/retropie/configs/atari800/retroarch.cfg.bkp
-    cat /opt/retropie/configs/atari800/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/atari800/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Atari-800.cfg"' /opt/retropie/configs/atari800/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/atari800/retroarch.cfg
+    cp /opt/ares/configs/atari800/retroarch.cfg /opt/ares/configs/atari800/retroarch.cfg.bkp
+    cat /opt/ares/configs/atari800/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/atari800/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Atari-800.cfg"' /opt/ares/configs/atari800/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/atari800/retroarch.cfg
   else
-    cp /opt/retropie/configs/atari800/retroarch.cfg /opt/retropie/configs/atari800/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Atari-800.cfg"' /opt/retropie/configs/atari800/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/atari800/retroarch.cfg
+    cp /opt/ares/configs/atari800/retroarch.cfg /opt/ares/configs/atari800/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Atari-800.cfg"' /opt/ares/configs/atari800/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/atari800/retroarch.cfg
   fi
   ;;
 atarist)
-  ifexist=`cat /opt/retropie/configs/atarist/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/atarist/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/atarist/retroarch.cfg /opt/retropie/configs/atarist/retroarch.cfg.bkp
-    cat /opt/retropie/configs/atarist/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/atarist/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Atari-ST.cfg"' /opt/retropie/configs/atarist/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/atarist/retroarch.cfg
+    cp /opt/ares/configs/atarist/retroarch.cfg /opt/ares/configs/atarist/retroarch.cfg.bkp
+    cat /opt/ares/configs/atarist/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/atarist/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Atari-ST.cfg"' /opt/ares/configs/atarist/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/atarist/retroarch.cfg
   else
-    cp /opt/retropie/configs/atarist/retroarch.cfg /opt/retropie/configs/atarist/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Atari-ST.cfg"' /opt/retropie/configs/atarist/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/atarist/retroarch.cfg
+    cp /opt/ares/configs/atarist/retroarch.cfg /opt/ares/configs/atarist/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Atari-ST.cfg"' /opt/ares/configs/atarist/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/atarist/retroarch.cfg
   fi
   ;;
 c64)
-  ifexist=`cat /opt/retropie/configs/c64/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/c64/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/c64/retroarch.cfg /opt/retropie/configs/c64/retroarch.cfg.bkp
-    cat /opt/retropie/configs/c64/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/c64/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Commodore-64.cfg"' /opt/retropie/configs/c64/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/c64/retroarch.cfg
+    cp /opt/ares/configs/c64/retroarch.cfg /opt/ares/configs/c64/retroarch.cfg.bkp
+    cat /opt/ares/configs/c64/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/c64/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Commodore-64.cfg"' /opt/ares/configs/c64/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/c64/retroarch.cfg
   else
-    cp /opt/retropie/configs/c64/retroarch.cfg /opt/retropie/configs/c64/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Commodore-64.cfg"' /opt/retropie/configs/c64/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/c64/retroarch.cfg
+    cp /opt/ares/configs/c64/retroarch.cfg /opt/ares/configs/c64/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Commodore-64.cfg"' /opt/ares/configs/c64/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/c64/retroarch.cfg
   fi
   ;;
 msx)
-  ifexist=`cat /opt/retropie/configs/msx/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/msx/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/msx/retroarch.cfg /opt/retropie/configs/msx/retroarch.cfg.bkp
-    cat /opt/retropie/configs/msx/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/msx/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Microsoft-MSX.cfg"' /opt/retropie/configs/msx/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/msx/retroarch.cfg
+    cp /opt/ares/configs/msx/retroarch.cfg /opt/ares/configs/msx/retroarch.cfg.bkp
+    cat /opt/ares/configs/msx/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/msx/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Microsoft-MSX.cfg"' /opt/ares/configs/msx/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/msx/retroarch.cfg
   else
-    cp /opt/retropie/configs/msx/retroarch.cfg /opt/retropie/configs/msx/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Microsoft-MSX.cfg"' /opt/retropie/configs/msx/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/msx/retroarch.cfg
+    cp /opt/ares/configs/msx/retroarch.cfg /opt/ares/configs/msx/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Microsoft-MSX.cfg"' /opt/ares/configs/msx/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/msx/retroarch.cfg
   fi
   ;;
 msx2)
-  ifexist=`cat /opt/retropie/configs/msx2/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/msx2/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/msx2/retroarch.cfg /opt/retropie/configs/msx2/retroarch.cfg.bkp
-    cat /opt/retropie/configs/msx2/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/msx2/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Microsoft-MSX2.cfg"' /opt/retropie/configs/msx2/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/msx2/retroarch.cfg
+    cp /opt/ares/configs/msx2/retroarch.cfg /opt/ares/configs/msx2/retroarch.cfg.bkp
+    cat /opt/ares/configs/msx2/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/msx2/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Microsoft-MSX2.cfg"' /opt/ares/configs/msx2/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/msx2/retroarch.cfg
   else
-    cp /opt/retropie/configs/msx2/retroarch.cfg /opt/retropie/configs/msx2/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Microsoft-MSX2.cfg"' /opt/retropie/configs/msx2/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/msx2/retroarch.cfg
+    cp /opt/ares/configs/msx2/retroarch.cfg /opt/ares/configs/msx2/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Microsoft-MSX2.cfg"' /opt/ares/configs/msx2/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/msx2/retroarch.cfg
   fi
   ;;
 videopac)
-  ifexist=`cat /opt/retropie/configs/videopac/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/videopac/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/videopac/retroarch.cfg /opt/retropie/configs/videopac/retroarch.cfg.bkp
-    cat /opt/retropie/configs/videopac/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/videopac/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Magnavox-Odyssey-2.cfg"' /opt/retropie/configs/videopac/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/videopac/retroarch.cfg
+    cp /opt/ares/configs/videopac/retroarch.cfg /opt/ares/configs/videopac/retroarch.cfg.bkp
+    cat /opt/ares/configs/videopac/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/videopac/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Magnavox-Odyssey-2.cfg"' /opt/ares/configs/videopac/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/videopac/retroarch.cfg
   else
-    cp /opt/retropie/configs/videopac/retroarch.cfg /opt/retropie/configs/videopac/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Magnavox-Odyssey-2.cfg"' /opt/retropie/configs/videopac/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/videopac/retroarch.cfg
+    cp /opt/ares/configs/videopac/retroarch.cfg /opt/ares/configs/videopac/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Magnavox-Odyssey-2.cfg"' /opt/ares/configs/videopac/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/videopac/retroarch.cfg
   fi
   ;;
 x68000)
-  ifexist=`cat /opt/retropie/configs/x68000/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/x68000/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/x68000/retroarch.cfg /opt/retropie/configs/x68000/retroarch.cfg.bkp
-    cat /opt/retropie/configs/x68000/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/x68000/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Sharp-X68000.cfg"' /opt/retropie/configs/x68000/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/x68000/retroarch.cfg
+    cp /opt/ares/configs/x68000/retroarch.cfg /opt/ares/configs/x68000/retroarch.cfg.bkp
+    cat /opt/ares/configs/x68000/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/x68000/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Sharp-X68000.cfg"' /opt/ares/configs/x68000/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/x68000/retroarch.cfg
   else
-    cp /opt/retropie/configs/x68000/retroarch.cfg /opt/retropie/configs/x68000/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Sharp-X68000.cfg"' /opt/retropie/configs/x68000/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/x68000/retroarch.cfg
+    cp /opt/ares/configs/x68000/retroarch.cfg /opt/ares/configs/x68000/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Sharp-X68000.cfg"' /opt/ares/configs/x68000/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/x68000/retroarch.cfg
   fi
   ;;
 zx81)
-  ifexist=`cat /opt/retropie/configs/zx81/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/zx81/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/zx81/retroarch.cfg /opt/retropie/configs/zx81/retroarch.cfg.bkp
-    cat /opt/retropie/configs/zx81/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/zx81/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Sinclair-ZX-Spectrum.cfg"' /opt/retropie/configs/zx81/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/zx81/retroarch.cfg
+    cp /opt/ares/configs/zx81/retroarch.cfg /opt/ares/configs/zx81/retroarch.cfg.bkp
+    cat /opt/ares/configs/zx81/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/zx81/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Sinclair-ZX-Spectrum.cfg"' /opt/ares/configs/zx81/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/zx81/retroarch.cfg
   else
-    cp /opt/retropie/configs/zx81/retroarch.cfg /opt/retropie/configs/zx81/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Sinclair-ZX-Spectrum.cfg"' /opt/retropie/configs/zx81/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/zx81/retroarch.cfg
+    cp /opt/ares/configs/zx81/retroarch.cfg /opt/ares/configs/zx81/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Sinclair-ZX-Spectrum.cfg"' /opt/ares/configs/zx81/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/zx81/retroarch.cfg
   fi
   ;;
 zxspectrum)
-  ifexist=`cat /opt/retropie/configs/zxspectrum/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/zxspectrum/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/zxspectrum/retroarch.cfg /opt/retropie/configs/zxspectrum/retroarch.cfg.bkp
-    cat /opt/retropie/configs/zxspectrum/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/zxspectrum/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Sinclair-ZX-Spectrum.cfg"' /opt/retropie/configs/zxspectrum/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/zxspectrum/retroarch.cfg
+    cp /opt/ares/configs/zxspectrum/retroarch.cfg /opt/ares/configs/zxspectrum/retroarch.cfg.bkp
+    cat /opt/ares/configs/zxspectrum/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/zxspectrum/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Sinclair-ZX-Spectrum.cfg"' /opt/ares/configs/zxspectrum/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/zxspectrum/retroarch.cfg
   else
-    cp /opt/retropie/configs/zxspectrum/retroarch.cfg /opt/retropie/configs/zxspectrum/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Sinclair-ZX-Spectrum.cfg"' /opt/retropie/configs/zxspectrum/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/zxspectrum/retroarch.cfg
+    cp /opt/ares/configs/zxspectrum/retroarch.cfg /opt/ares/configs/zxspectrum/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Sinclair-ZX-Spectrum.cfg"' /opt/ares/configs/zxspectrum/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/zxspectrum/retroarch.cfg
   fi
   ;;
 supergamemachine)
-  ifexist=`cat /opt/retropie/configs/supergamemachine/retroarch.cfg |grep "input_overlay" |wc -l`
+  ifexist=`cat /opt/ares/configs/supergamemachine/retroarch.cfg |grep "input_overlay" |wc -l`
   if [[ ${ifexist} > 0 ]]
   then
-    cp /opt/retropie/configs/supergamemachine/retroarch.cfg /opt/retropie/configs/supergamemachine/retroarch.cfg.bkp
-    cat /opt/retropie/configs/supergamemachine/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
-    cp /tmp/retroarch.cfg /opt/retropie/configs/supergamemachine/retroarch.cfg
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/Atari-2600.cfg"' /opt/retropie/configs/supergamemachine/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/supergamemachine/retroarch.cfg
+    cp /opt/ares/configs/supergamemachine/retroarch.cfg /opt/ares/configs/supergamemachine/retroarch.cfg.bkp
+    cat /opt/ares/configs/supergamemachine/retroarch.cfg |grep -v input_overlay |grep -v aspect_ratio |grep -v custom_viewport > /tmp/retroarch.cfg
+    cp /tmp/retroarch.cfg /opt/ares/configs/supergamemachine/retroarch.cfg
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/Atari-2600.cfg"' /opt/ares/configs/supergamemachine/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/supergamemachine/retroarch.cfg
   else
-    cp /opt/retropie/configs/supergamemachine/retroarch.cfg /opt/retropie/configs/supergamemachine/retroarch.cfg.bkp
-    sed -i '2i input_overlay = "/opt/retropie/configs/all/retroarch/overlay/SuperGameMachine.cfg"' /opt/retropie/configs/supergamemachine/retroarch.cfg
-    sed -i '3i input_overlay_opacity = "1.000000"' /opt/retropie/configs/supergamemachine/retroarch.cfg
+    cp /opt/ares/configs/supergamemachine/retroarch.cfg /opt/ares/configs/supergamemachine/retroarch.cfg.bkp
+    sed -i '2i input_overlay = "/opt/ares/configs/all/retroarch/overlay/SuperGameMachine.cfg"' /opt/ares/configs/supergamemachine/retroarch.cfg
+    sed -i '3i input_overlay_opacity = "1.000000"' /opt/ares/configs/supergamemachine/retroarch.cfg
   fi
   ;;
 esac
